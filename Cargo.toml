@@ -1,0 +1,10 @@
+[package]
+name = "awbw-dmg-calc-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+strum = { version = "0.26", features = ["derive"] }
+
+[dev-dependencies]
+insta = { version = "1.40", features = ["redactions", "yaml"] }
