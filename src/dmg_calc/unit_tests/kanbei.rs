@@ -1,0 +1,88 @@
+use super::*;
+
+#[test]
+fn test_colin_vs_kanbei_aa_vs_aa_scop_vs_scop() {
+  let atk = DmgCalcInput {
+    cities: 21,
+    co: CoId::Colin,
+    funds: 10_000,
+    hp: Some(100),
+    power: ActivePower::Super,
+    has_ammo: true,
+    terrain_id: TerrainId::CRoad,
+    towers: 0,
+    units_id: UnitId::AntiAir,
+  };
+  let def = DmgCalcInput {
+    cities: 21,
+    co: CoId::Kanbei,
+    funds: 0,
+    hp: Some(100),
+    power: ActivePower::Normal,
+    has_ammo: true,
+    terrain_id: TerrainId::CRoad,
+    towers: 0,
+    units_id: UnitId::AntiAir,
+  };
+  insta::assert_debug_snapshot!(calc(atk, def), @r###"
+  Ok(
+      DmgCalcOutput {
+          atk: Damage {
+              min: 35,
+              max: 40,
+          },
+          def_took_max: Damage {
+              min: 36,
+              max: 41,
+          },
+          def_took_min: Damage {
+              min: 42,
+              max: 48,
+          },
+      },
+  )
+  "###);
+}
+#[test]
+fn test_kanbei_vs_colin_aa_vs_aa_scop_vs_scop() {
+  let atk = DmgCalcInput {
+    cities: 21,
+    co: CoId::Kanbei,
+    funds: 10_000,
+    hp: Some(100),
+    power: ActivePower::Super,
+    has_ammo: true,
+    terrain_id: TerrainId::CRoad,
+    towers: 0,
+    units_id: UnitId::AntiAir,
+  };
+  let def = DmgCalcInput {
+    cities: 21,
+    co: CoId::Colin,
+    funds: 10_000,
+    hp: Some(100),
+    power: ActivePower::Super,
+    has_ammo: true,
+    terrain_id: TerrainId::CRoad,
+    towers: 0,
+    units_id: UnitId::AntiAir,
+  };
+  insta::assert_debug_snapshot!(calc(atk, def), @r###"
+  Ok(
+      DmgCalcOutput {
+          atk: Damage {
+              min: 60,
+              max: 68,
+          },
+          def_took_max: Damage {
+              min: 9,
+              max: 10,
+          },
+          def_took_min: Damage {
+              min: 9,
+              max: 10,
+          },
+      },
+  )
+  "###);
+}
