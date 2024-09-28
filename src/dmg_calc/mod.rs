@@ -44,7 +44,7 @@ pub struct DmgCalcOutput {
   pub def_took_min: Damage,
 }
 
-fn _calc(atk: DmgCalcInput, def: DmgCalcInput) -> Result<Damage, Error> {
+fn _calc(atk: DmgCalcInput, def: DmgCalcInput, is_counter_attack: bool) -> Result<Damage, Error> {
   let pri_base_dmg = pri_base_dmg_map().get(&BaseDmgMapKey {
     atk: atk.units_id,
     def: def.units_id,
@@ -65,7 +65,7 @@ fn _calc(atk: DmgCalcInput, def: DmgCalcInput) -> Result<Damage, Error> {
     (Some(dmg), Some(_)) => dmg,
   } as f64;
 
-  let atk_value = calc_co_atk(atk) as f64 + atk.towers as f64 * 10.;
+  let atk_value = calc_co_atk(atk, is_counter_attack) as f64 + atk.towers as f64 * 10.;
   let def_value = calc_co_def(def, atk) as f64;
   let def_terrain_stars = *terrain_stars_map().get(&def.terrain_id).unwrap() as f64;
   let def_terrain_stars = if def.co == CoId::Lash && def.power == ActivePower::Super {
@@ -129,7 +129,7 @@ pub fn calc(atk: DmgCalcInput, def: DmgCalcInput) -> Result<DmgCalcOutput, Error
   } else {
     (atk, def)
   };
-  let atk_dmg = _calc(atk, def)?;
+  let atk_dmg = _calc(atk, def, false)?;
   let def_hp = def.hp.unwrap() as u32;
 
   let mut _calc_def_dmg = |atk_dmg: u32| {
@@ -139,12 +139,7 @@ pub fn calc(atk: DmgCalcInput, def: DmgCalcInput) -> Result<DmgCalcOutput, Error
       let def_hp = def_hp - atk_dmg;
       def.hp = Some(def_hp as u8);
     }
-    let mut def_dmg = _calc(def, atk).unwrap_or(Damage { min: 0, max: 0 });
-    if def.co == CoId::Kanbei && def.power == ActivePower::Super {
-      def_dmg.min += def_dmg.min * 2;
-      def_dmg.max += def_dmg.max * 2;
-    }
-    def_dmg
+    _calc(def, atk, true).unwrap_or(Damage { min: 0, max: 0 })
   };
   let def_took_min = _calc_def_dmg(atk_dmg.min);
   let def_took_max = _calc_def_dmg(atk_dmg.max);

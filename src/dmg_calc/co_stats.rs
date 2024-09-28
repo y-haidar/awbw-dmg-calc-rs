@@ -48,7 +48,7 @@ pub enum CoId {
   VonBolt = 30,
 }
 
-pub fn calc_co_atk(atk: DmgCalcInput) -> u32 {
+pub fn calc_co_atk(atk: DmgCalcInput, is_counter_attack: bool) -> u32 {
   const BASE_POWER: u32 = 10;
 
   let co_atk = match atk.co {
@@ -117,6 +117,7 @@ pub fn calc_co_atk(atk: DmgCalcInput) -> u32 {
     CoId::Kanbei => match atk.power {
       ActivePower::None => 130,
       ActivePower::Normal => 140,
+      ActivePower::Super if is_counter_attack => 130 / 2 + 140,
       ActivePower::Super => 140,
     },
 
