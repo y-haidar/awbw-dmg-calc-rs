@@ -19,6 +19,12 @@ pub struct BaseDmgMapKey {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct Damage {
+  pub min: u32,
+  pub max: u32,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct DmgCalcInput {
   pub cities: u32,
   pub co: CoId,
@@ -29,6 +35,13 @@ pub struct DmgCalcInput {
   pub terrain_id: TerrainId,
   pub towers: u8,
   pub units_id: UnitId,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct DmgCalcOutput {
+  pub atk: Damage,
+  pub def_took_max: Damage,
+  pub def_took_min: Damage,
 }
 
 fn _calc(atk: DmgCalcInput, def: DmgCalcInput) -> Result<Damage, Error> {
@@ -107,19 +120,6 @@ fn _calc(atk: DmgCalcInput, def: DmgCalcInput) -> Result<Damage, Error> {
     min: dmg_min,
     max: dmg_max,
   })
-}
-
-#[derive(Debug)]
-pub struct Damage {
-  pub min: u32,
-  pub max: u32,
-}
-
-#[derive(Debug)]
-pub struct DmgCalcOutput {
-  pub atk: Damage,
-  pub def_took_max: Damage,
-  pub def_took_min: Damage,
 }
 
 pub fn calc(atk: DmgCalcInput, def: DmgCalcInput) -> Result<DmgCalcOutput, Error> {

@@ -18,30 +18,20 @@ fn test_colin_vs_kanbei_aa_vs_aa_scop_vs_scop() {
     co: CoId::Kanbei,
     funds: 0,
     hp: Some(100),
-    power: ActivePower::Normal,
+    power: ActivePower::Super,
     has_ammo: true,
     terrain_id: TerrainId::CRoad,
     towers: 0,
     units_id: UnitId::AntiAir,
   };
-  insta::assert_debug_snapshot!(calc(atk, def), @r###"
-  Ok(
-      DmgCalcOutput {
-          atk: Damage {
-              min: 35,
-              max: 40,
-          },
-          def_took_max: Damage {
-              min: 36,
-              max: 41,
-          },
-          def_took_min: Damage {
-              min: 42,
-              max: 48,
-          },
-      },
-  )
-  "###);
+  assert_eq!(
+    calc(atk, def).unwrap(),
+    DmgCalcOutput {
+      atk: Damage { min: 23, max: 27 },
+      def_took_max: Damage { min: 69, max: 76 },
+      def_took_min: Damage { min: 69, max: 76 },
+    }
+  );
 }
 #[test]
 fn test_kanbei_vs_colin_aa_vs_aa_scop_vs_scop() {
