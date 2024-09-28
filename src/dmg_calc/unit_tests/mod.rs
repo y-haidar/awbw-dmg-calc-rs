@@ -1,6 +1,7 @@
 use super::*;
 
 mod kanbei;
+mod lash;
 
 #[test]
 fn test_adder_vs_adder_aa_vs_inf() {
