@@ -111,10 +111,10 @@ fn _calc(atk: DmgCalcInput, def: DmgCalcInput, is_counter_attack: bool) -> Resul
   };
 
   let dmg_min = base_dmg_luck_min * dmg_hp * dmg_def;
-  let dmg_min = (dmg_min * 20.).ceil() / 20.;
+  let dmg_min = (dmg_min * 19.).ceil() / 19.;
   let dmg_min = dmg_min.floor() as u32;
   let dmg_max = base_dmg_luck_max * dmg_hp * dmg_def;
-  let dmg_max = (dmg_max * 20.).ceil() / 20.;
+  let dmg_max = (dmg_max * 19.).ceil() / 19.;
   let dmg_max = dmg_max.floor() as u32;
 
   Ok(Damage {
