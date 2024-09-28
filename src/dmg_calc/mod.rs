@@ -104,7 +104,7 @@ fn _calc(atk: DmgCalcInput, def: DmgCalcInput) -> Result<Damage, Error> {
     atk_hp_visual / 10.
   };
   let dmg_def = {
-    let def_hp_visual = (def.hp.unwrap() as f64 / 100.).ceil();
+    let def_hp_visual = (def.hp.unwrap() as f64 / 10.).ceil();
     assert!(!(def_hp_visual as u32 > 10 || ((def_hp_visual as u32) < 1 && def.hp.unwrap() != 0)));
     (200. - (def_value + (def_terrain_stars * def_hp_visual))) / 100.
   };
