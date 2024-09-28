@@ -90,22 +90,12 @@ fn test_kanbei_vs_colin_aa_vs_aa_scop_vs_scop() {
     towers: 0,
     units_id: UnitId::AntiAir,
   };
-  insta::assert_debug_snapshot!(calc(atk, def), @r###"
-  Ok(
-      DmgCalcOutput {
-          atk: Damage {
-              min: 60,
-              max: 68,
-          },
-          def_took_max: Damage {
-              min: 9,
-              max: 10,
-          },
-          def_took_min: Damage {
-              min: 9,
-              max: 10,
-          },
-      },
-  )
-  "###);
+  assert_eq!(
+    calc(atk, def).unwrap(),
+    DmgCalcOutput {
+      atk: Damage { min: 60, max: 68 },
+      def_took_max: Damage { min: 9, max: 10 },
+      def_took_min: Damage { min: 9, max: 10 },
+    }
+  );
 }

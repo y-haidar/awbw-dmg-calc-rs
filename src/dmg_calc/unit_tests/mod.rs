@@ -26,24 +26,14 @@ fn test_adder_vs_adder_aa_vs_inf() {
     towers: 0,
     units_id: UnitId::Infantry,
   };
-  insta::assert_debug_snapshot!(calc(atk, def), @r###"
-    Ok(
-        DmgCalcOutput {
-            atk: Damage {
-                min: 105,
-                max: 114,
-            },
-            def_took_max: Damage {
-                min: 0,
-                max: 0,
-            },
-            def_took_min: Damage {
-                min: 0,
-                max: 0,
-            },
-        },
-    )
-    "###);
+  assert_eq!(
+    calc(atk, def).unwrap(),
+    DmgCalcOutput {
+      atk: Damage { min: 105, max: 114 },
+      def_took_max: Damage { min: 0, max: 0 },
+      def_took_min: Damage { min: 0, max: 0 },
+    }
+  );
 }
 #[test]
 fn test_adder_vs_adder_aa_vs_inf_cop() {
@@ -69,24 +59,14 @@ fn test_adder_vs_adder_aa_vs_inf_cop() {
     towers: 0,
     units_id: UnitId::Infantry,
   };
-  insta::assert_debug_snapshot!(calc(atk, def), @r###"
-    Ok(
-        DmgCalcOutput {
-            atk: Damage {
-                min: 115,
-                max: 124,
-            },
-            def_took_max: Damage {
-                min: 0,
-                max: 0,
-            },
-            def_took_min: Damage {
-                min: 0,
-                max: 0,
-            },
-        },
-    )
-    "###);
+  assert_eq!(
+    calc(atk, def).unwrap(),
+    DmgCalcOutput {
+      atk: Damage { min: 115, max: 124 },
+      def_took_max: Damage { min: 0, max: 0 },
+      def_took_min: Damage { min: 0, max: 0 },
+    }
+  );
 }
 
 #[test]
@@ -113,24 +93,14 @@ fn test_colin_vs_adder_aa_vs_inf() {
     towers: 0,
     units_id: UnitId::Infantry,
   };
-  insta::assert_debug_snapshot!(calc(atk, def), @r###"
-    Ok(
-        DmgCalcOutput {
-            atk: Damage {
-                min: 94,
-                max: 103,
-            },
-            def_took_max: Damage {
-                min: 0,
-                max: 0,
-            },
-            def_took_min: Damage {
-                min: 0,
-                max: 1,
-            },
-        },
-    )
-    "###);
+  assert_eq!(
+    calc(atk, def).unwrap(),
+    DmgCalcOutput {
+      atk: Damage { min: 94, max: 103 },
+      def_took_max: Damage { min: 0, max: 0 },
+      def_took_min: Damage { min: 0, max: 1 },
+    }
+  );
 }
 #[test]
 fn test_colin_vs_adder_aa_vs_inf_scop() {
@@ -156,24 +126,14 @@ fn test_colin_vs_adder_aa_vs_inf_scop() {
     towers: 0,
     units_id: UnitId::Infantry,
   };
-  insta::assert_debug_snapshot!(calc(atk, def), @r###"
-    Ok(
-        DmgCalcOutput {
-            atk: Damage {
-                min: 136,
-                max: 145,
-            },
-            def_took_max: Damage {
-                min: 0,
-                max: 0,
-            },
-            def_took_min: Damage {
-                min: 0,
-                max: 0,
-            },
-        },
-    )
-    "###);
+  assert_eq!(
+    calc(atk, def).unwrap(),
+    DmgCalcOutput {
+      atk: Damage { min: 136, max: 145 },
+      def_took_max: Damage { min: 0, max: 0 },
+      def_took_min: Damage { min: 0, max: 0 },
+    }
+  );
 }
 #[test]
 fn test_colin_vs_adder_aa_vs_aa() {
@@ -199,24 +159,14 @@ fn test_colin_vs_adder_aa_vs_aa() {
     towers: 0,
     units_id: UnitId::AntiAir,
   };
-  insta::assert_debug_snapshot!(calc(atk, def), @r###"
-    Ok(
-        DmgCalcOutput {
-            atk: Damage {
-                min: 40,
-                max: 49,
-            },
-            def_took_max: Damage {
-                min: 27,
-                max: 32,
-            },
-            def_took_min: Damage {
-                min: 27,
-                max: 32,
-            },
-        },
-    )
-    "###);
+  assert_eq!(
+    calc(atk, def).unwrap(),
+    DmgCalcOutput {
+      atk: Damage { min: 40, max: 49 },
+      def_took_max: Damage { min: 27, max: 32 },
+      def_took_min: Damage { min: 27, max: 32 },
+    }
+  );
 }
 #[test]
 fn test_colin_vs_adder_aa_vs_aa_scop() {
@@ -242,22 +192,12 @@ fn test_colin_vs_adder_aa_vs_aa_scop() {
     towers: 0,
     units_id: UnitId::AntiAir,
   };
-  insta::assert_debug_snapshot!(calc(atk, def), @r###"
-    Ok(
-        DmgCalcOutput {
-            atk: Damage {
-                min: 58,
-                max: 67,
-            },
-            def_took_max: Damage {
-                min: 16,
-                max: 19,
-            },
-            def_took_min: Damage {
-                min: 20,
-                max: 24,
-            },
-        },
-    )
-    "###);
+  assert_eq!(
+    calc(atk, def).unwrap(),
+    DmgCalcOutput {
+      atk: Damage { min: 58, max: 67 },
+      def_took_max: Damage { min: 16, max: 19 },
+      def_took_min: Damage { min: 20, max: 24 },
+    }
+  );
 }
