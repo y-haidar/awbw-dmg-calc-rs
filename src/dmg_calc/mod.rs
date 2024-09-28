@@ -19,7 +19,7 @@ pub struct BaseDmgMapKey {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub struct DmgCalc {
+pub struct DmgCalcInput {
   pub cities: u32,
   pub co: CoId,
   pub funds: u32,
@@ -31,7 +31,7 @@ pub struct DmgCalc {
   pub units_id: UnitId,
 }
 
-pub fn calc(atk: DmgCalc, def: DmgCalc) -> Result<(u32, u32), Error> {
+fn _calc(atk: DmgCalcInput, def: DmgCalcInput) -> Result<Damage, Error> {
   let pri_base_dmg = pri_base_dmg_map().get(&BaseDmgMapKey {
     atk: atk.units_id,
     def: def.units_id,
@@ -83,19 +83,76 @@ pub fn calc(atk: DmgCalc, def: DmgCalc) -> Result<(u32, u32), Error> {
   };
 
   let dmg_base_atk = ((base_dmg) * atk_value) as f64 / 100.;
-  let dmg_luck_min = dmg_base_atk - luck_bad as f64;
-  let dmg_luck_max = dmg_base_atk + luck_good as f64;
-  let dmg_hp = atk.hp.unwrap() as f64 / 10.;
-  let dmg_def = (200. - (def_value + (def_terrain_stars * def.hp.unwrap() as f64))) / 100.;
+  let base_dmg_luck_min = dmg_base_atk - luck_bad as f64;
+  let base_dmg_luck_max = dmg_base_atk + luck_good as f64;
+  let dmg_hp = {
+    let atk_hp_visual = (atk.hp.unwrap() as f64 / 10.).ceil();
+    assert!(!(atk_hp_visual as u32 > 10 || ((atk_hp_visual as u32) < 1 && atk.hp.unwrap() != 0)));
+    atk_hp_visual / 10.
+  };
+  let dmg_def = {
+    let def_hp_visual = (def.hp.unwrap() as f64 / 100.).ceil();
+    assert!(!(def_hp_visual as u32 > 10 || ((def_hp_visual as u32) < 1 && def.hp.unwrap() != 0)));
+    (200. - (def_value + (def_terrain_stars * def_hp_visual))) / 100.
+  };
 
-  let dmg_min = dmg_luck_min * dmg_hp * dmg_def;
+  let dmg_min = base_dmg_luck_min * dmg_hp * dmg_def;
   let dmg_min = (dmg_min * 20.).ceil() / 20.;
-  let dmg_min = dmg_min.floor();
-  let dmg_max = dmg_luck_max * dmg_hp * dmg_def;
+  let dmg_min = dmg_min.floor() as u32;
+  let dmg_max = base_dmg_luck_max * dmg_hp * dmg_def;
   let dmg_max = (dmg_max * 20.).ceil() / 20.;
-  let dmg_max = dmg_max.floor();
+  let dmg_max = dmg_max.floor() as u32;
 
-  Ok((dmg_min as u32, dmg_max as u32))
+  Ok(Damage {
+    min: dmg_min,
+    max: dmg_max,
+  })
+}
+
+#[derive(Debug)]
+pub struct Damage {
+  pub min: u32,
+  pub max: u32,
+}
+
+#[derive(Debug)]
+pub struct DmgCalcOutput {
+  pub atk: Damage,
+  pub def_took_max: Damage,
+  pub def_took_min: Damage,
+}
+
+pub fn calc(atk: DmgCalcInput, def: DmgCalcInput) -> Result<DmgCalcOutput, Error> {
+  let (atk, mut def) = if def.co == CoId::Sonja && def.power == ActivePower::Super {
+    (def, atk)
+  } else {
+    (atk, def)
+  };
+  let atk_dmg = _calc(atk, def)?;
+  let def_hp = def.hp.unwrap() as u32;
+
+  let mut _calc_def_dmg = |atk_dmg: u32| {
+    if def_hp < atk_dmg {
+      def.hp = Some(0);
+    } else {
+      let def_hp = def_hp - atk_dmg;
+      def.hp = Some(def_hp as u8);
+    }
+    let mut def_dmg = _calc(def, atk).unwrap_or(Damage { min: 0, max: 0 });
+    if def.co == CoId::Kanbei && def.power == ActivePower::Super {
+      def_dmg.min += def_dmg.min / 2;
+      def_dmg.max += def_dmg.max / 2;
+    }
+    def_dmg
+  };
+  let def_took_min = _calc_def_dmg(atk_dmg.min);
+  let def_took_max = _calc_def_dmg(atk_dmg.max);
+
+  Ok(DmgCalcOutput {
+    atk: atk_dmg,
+    def_took_min,
+    def_took_max,
+  })
 }
 
 #[derive(Debug)]
@@ -110,22 +167,22 @@ mod test {
 
   #[test]
   fn test_adder_vs_adder_aa_vs_inf() {
-    let atk = DmgCalc {
+    let atk = DmgCalcInput {
       cities: 21,
       co: CoId::Adder,
       funds: 10_000,
-      hp: Some(10),
+      hp: Some(100),
       power: ActivePower::None,
       has_ammo: true,
       terrain_id: TerrainId::CRoad,
       towers: 0,
       units_id: UnitId::AntiAir,
     };
-    let def = DmgCalc {
+    let def = DmgCalcInput {
       cities: 21,
       co: CoId::Adder,
       funds: 0,
-      hp: Some(10),
+      hp: Some(100),
       power: ActivePower::None,
       has_ammo: true,
       terrain_id: TerrainId::CRoad,
@@ -134,31 +191,41 @@ mod test {
     };
     insta::assert_debug_snapshot!(calc(atk, def), @r###"
     Ok(
-        (
-            105,
-            114,
-        ),
+        DmgCalcOutput {
+            atk: Damage {
+                min: 105,
+                max: 114,
+            },
+            def_took_max: Damage {
+                min: 0,
+                max: 0,
+            },
+            def_took_min: Damage {
+                min: 0,
+                max: 0,
+            },
+        },
     )
     "###);
   }
   #[test]
   fn test_adder_vs_adder_aa_vs_inf_cop() {
-    let atk = DmgCalc {
+    let atk = DmgCalcInput {
       cities: 21,
       co: CoId::Adder,
       funds: 10_000,
-      hp: Some(10),
+      hp: Some(100),
       power: ActivePower::Normal,
       has_ammo: true,
       terrain_id: TerrainId::CRoad,
       towers: 0,
       units_id: UnitId::AntiAir,
     };
-    let def = DmgCalc {
+    let def = DmgCalcInput {
       cities: 21,
       co: CoId::Adder,
       funds: 0,
-      hp: Some(10),
+      hp: Some(100),
       power: ActivePower::None,
       has_ammo: true,
       terrain_id: TerrainId::CRoad,
@@ -167,32 +234,42 @@ mod test {
     };
     insta::assert_debug_snapshot!(calc(atk, def), @r###"
     Ok(
-        (
-            115,
-            124,
-        ),
+        DmgCalcOutput {
+            atk: Damage {
+                min: 115,
+                max: 124,
+            },
+            def_took_max: Damage {
+                min: 0,
+                max: 0,
+            },
+            def_took_min: Damage {
+                min: 0,
+                max: 0,
+            },
+        },
     )
     "###);
   }
 
   #[test]
   fn test_colin_vs_adder_aa_vs_inf() {
-    let atk = DmgCalc {
+    let atk = DmgCalcInput {
       cities: 21,
       co: CoId::Colin,
       funds: 10_000,
-      hp: Some(10),
+      hp: Some(100),
       power: ActivePower::None,
       has_ammo: true,
       terrain_id: TerrainId::CRoad,
       towers: 0,
       units_id: UnitId::AntiAir,
     };
-    let def = DmgCalc {
+    let def = DmgCalcInput {
       cities: 21,
       co: CoId::Adder,
       funds: 0,
-      hp: Some(10),
+      hp: Some(100),
       power: ActivePower::None,
       has_ammo: true,
       terrain_id: TerrainId::CRoad,
@@ -201,31 +278,41 @@ mod test {
     };
     insta::assert_debug_snapshot!(calc(atk, def), @r###"
     Ok(
-        (
-            94,
-            103,
-        ),
+        DmgCalcOutput {
+            atk: Damage {
+                min: 94,
+                max: 103,
+            },
+            def_took_max: Damage {
+                min: 0,
+                max: 0,
+            },
+            def_took_min: Damage {
+                min: 0,
+                max: 1,
+            },
+        },
     )
     "###);
   }
   #[test]
   fn test_colin_vs_adder_aa_vs_inf_scop() {
-    let atk = DmgCalc {
+    let atk = DmgCalcInput {
       cities: 21,
       co: CoId::Colin,
       funds: 10_000,
-      hp: Some(10),
+      hp: Some(100),
       power: ActivePower::Super,
       has_ammo: true,
       terrain_id: TerrainId::CRoad,
       towers: 0,
       units_id: UnitId::AntiAir,
     };
-    let def = DmgCalc {
+    let def = DmgCalcInput {
       cities: 21,
       co: CoId::Adder,
       funds: 0,
-      hp: Some(10),
+      hp: Some(100),
       power: ActivePower::None,
       has_ammo: true,
       terrain_id: TerrainId::CRoad,
@@ -234,10 +321,106 @@ mod test {
     };
     insta::assert_debug_snapshot!(calc(atk, def), @r###"
     Ok(
-        (
-            136,
-            145,
-        ),
+        DmgCalcOutput {
+            atk: Damage {
+                min: 136,
+                max: 145,
+            },
+            def_took_max: Damage {
+                min: 0,
+                max: 0,
+            },
+            def_took_min: Damage {
+                min: 0,
+                max: 0,
+            },
+        },
+    )
+    "###);
+  }
+  #[test]
+  fn test_colin_vs_adder_aa_vs_aa() {
+    let atk = DmgCalcInput {
+      cities: 21,
+      co: CoId::Colin,
+      funds: 10_000,
+      hp: Some(100),
+      power: ActivePower::None,
+      has_ammo: true,
+      terrain_id: TerrainId::CRoad,
+      towers: 0,
+      units_id: UnitId::AntiAir,
+    };
+    let def = DmgCalcInput {
+      cities: 21,
+      co: CoId::Adder,
+      funds: 0,
+      hp: Some(100),
+      power: ActivePower::None,
+      has_ammo: true,
+      terrain_id: TerrainId::CRoad,
+      towers: 0,
+      units_id: UnitId::AntiAir,
+    };
+    insta::assert_debug_snapshot!(calc(atk, def), @r###"
+    Ok(
+        DmgCalcOutput {
+            atk: Damage {
+                min: 40,
+                max: 49,
+            },
+            def_took_max: Damage {
+                min: 27,
+                max: 32,
+            },
+            def_took_min: Damage {
+                min: 27,
+                max: 32,
+            },
+        },
+    )
+    "###);
+  }
+  #[test]
+  fn test_colin_vs_adder_aa_vs_aa_scop() {
+    let atk = DmgCalcInput {
+      cities: 21,
+      co: CoId::Colin,
+      funds: 10_000,
+      hp: Some(100),
+      power: ActivePower::Super,
+      has_ammo: true,
+      terrain_id: TerrainId::CRoad,
+      towers: 0,
+      units_id: UnitId::AntiAir,
+    };
+    let def = DmgCalcInput {
+      cities: 21,
+      co: CoId::Adder,
+      funds: 0,
+      hp: Some(100),
+      power: ActivePower::None,
+      has_ammo: true,
+      terrain_id: TerrainId::CRoad,
+      towers: 0,
+      units_id: UnitId::AntiAir,
+    };
+    insta::assert_debug_snapshot!(calc(atk, def), @r###"
+    Ok(
+        DmgCalcOutput {
+            atk: Damage {
+                min: 58,
+                max: 67,
+            },
+            def_took_max: Damage {
+                min: 16,
+                max: 19,
+            },
+            def_took_min: Damage {
+                min: 20,
+                max: 24,
+            },
+        },
     )
     "###);
   }

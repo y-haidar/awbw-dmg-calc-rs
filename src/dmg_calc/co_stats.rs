@@ -6,7 +6,7 @@ use crate::{
   units::{air_units, sea_units, vehicle_units, UnitId, FOOTSOLDIER_UNITS, INDIRECT_UNITS},
 };
 
-use super::DmgCalc;
+use super::DmgCalcInput;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Copy)]
 pub enum ActivePower {
@@ -48,7 +48,7 @@ pub enum CoId {
   VonBolt = 30,
 }
 
-pub fn calc_co_atk(atk: DmgCalc) -> u32 {
+pub fn calc_co_atk(atk: DmgCalcInput) -> u32 {
   const BASE_POWER: u32 = 10;
 
   let co_atk = match atk.co {
@@ -179,7 +179,7 @@ pub fn calc_co_atk(atk: DmgCalc) -> u32 {
   co_atk
 }
 
-pub fn calc_co_def(def: DmgCalc, atk: DmgCalc) -> u32 {
+pub fn calc_co_def(def: DmgCalcInput, atk: DmgCalcInput) -> u32 {
   const BASE_POWER: u32 = 10;
 
   let co_def = match def.co {
