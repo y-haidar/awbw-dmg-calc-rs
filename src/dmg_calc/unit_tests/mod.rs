@@ -1,6 +1,7 @@
 use super::*;
 
 mod kanbei;
+mod kindle;
 mod lash;
 
 #[test]
