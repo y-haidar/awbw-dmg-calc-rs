@@ -106,7 +106,8 @@ fn _calc(atk: DmgCalcInput, def: DmgCalcInput) -> Result<Damage, Error> {
   let dmg_def = {
     let def_hp_visual = (def.hp.unwrap() as f64 / 10.).ceil();
     assert!(!(def_hp_visual as u32 > 10 || ((def_hp_visual as u32) < 1 && def.hp.unwrap() != 0)));
-    (200. - (def_value + (def_terrain_stars * def_hp_visual))) / 100.
+    let soft_def = (def_value + def_terrain_stars * 10.) * def_hp_visual / 10.;
+    (200. - soft_def) / 100.
   };
 
   let dmg_min = base_dmg_luck_min * dmg_hp * dmg_def;
